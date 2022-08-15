@@ -2,6 +2,8 @@ package mapx
 
 import "golang.org/x/exp/maps"
 
+const maxShards = 65536
+
 type segment[K comparable, V any] struct {
 	m Map[K, V]
 }
@@ -18,6 +20,9 @@ func NewSegmentMap[K comparable, V any](initSize int, shards int, hasher Hash[K]
 		stdMap := NewStdMap[K, V](initSize)
 		seg := &segment[K, V]{m: stdMap}
 		segments = append(segments, seg)
+	}
+	if shards > maxShards {
+		shards = maxShards
 	}
 	return &SegmentMap[K, V]{hasher: hasher, segments: segments, shards: shards}
 }
