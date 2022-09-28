@@ -27,24 +27,28 @@ func NewSegmentMap[K comparable, V any](initSize int, shards int, hasher Hash[K]
 	return &SegmentMap[K, V]{hasher: hasher, segments: segments, shards: shards}
 }
 
+func (m *SegmentMap[K, V]) getSegment(key K) *segment[K, V] {
+	return m.segments[int(m.hasher.Sum(key))%m.shards]
+}
+
 func (m *SegmentMap[K, V]) Load(key K) (value V, ok bool) {
-	return m.segments[m.hasher.Sum(key)%m.shards].m.Load(key)
+	return m.getSegment(key).m.Load(key)
 }
 
 func (m *SegmentMap[K, V]) Store(key K, value V) {
-	m.segments[m.hasher.Sum(key)%m.shards].m.Store(key, value)
+	m.getSegment(key).m.Store(key, value)
 }
 
 func (m *SegmentMap[K, V]) LoadOrStore(key K, value V) (actual V, loaded bool) {
-	return m.segments[m.hasher.Sum(key)%m.shards].m.LoadOrStore(key, value)
+	return m.getSegment(key).m.LoadOrStore(key, value)
 }
 
 func (m *SegmentMap[K, V]) LoadAndDelete(key K) (value V, loaded bool) {
-	return m.segments[m.hasher.Sum(key)%m.shards].m.LoadAndDelete(key)
+	return m.getSegment(key).m.LoadAndDelete(key)
 }
 
 func (m *SegmentMap[K, V]) Delete(key K) {
-	m.segments[m.hasher.Sum(key)%m.shards].m.Delete(key)
+	m.getSegment(key).m.Delete(key)
 }
 
 func (m *SegmentMap[K, V]) DeleteFunc(del func(K, V) bool) {
